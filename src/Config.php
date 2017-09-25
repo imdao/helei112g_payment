@@ -16,6 +16,8 @@ final class Config
 
     //========================= ali相关接口 =======================//
     // 支付相关常量
+    const ALI_CHANNEL_OLDAPP = 'ali_oldapp';// 兼容公司需要的APP支付
+
     const ALI_CHANNEL_APP = 'ali_app';// 支付宝 手机app 支付
 
     const ALI_CHANNEL_WAP = 'ali_wap';// 支付宝 手机网页 支付
