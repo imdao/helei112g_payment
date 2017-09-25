@@ -2,7 +2,9 @@
 namespace Payment\Charge\Ali;
 
 use Payment\Common\Ali\AliBaseStrategy;
-use Payment\Common\Ali\Data\Charge\AppChargeData;
+use Payment\Common\Ali\Data\Charge\OldAppChargeData;
+use Payment\Utils\ArrayUtil;
+use Payment\Utils\StrUtil;
 
 /**
  * @author: helei
@@ -25,17 +27,35 @@ class AliOldAppCharge extends AliBaseStrategy
     {
         $this->config->method = $this->method;
         // 以下两种方式任选一种
-        return AppChargeData::class;
+        return OldAppChargeData::class;
     }
 
+
     /**
-     * 组装返回的数据格式
+     * 处理支付宝的返回值并返回给客户端
+     * @author: imdao
      * @param array $data
-     * @return string
+     * @return string|array
+     * @author helei
      */
     protected function retData(array $data)
     {
-        $data = parent::retData($data);
+        $sign = $data['sign'];
+        $data = ArrayUtil::removeKeys($data, ['sign']);
+
+        //为兼容公司客户端支付参数，强制取消参数排序
+        //$data = ArrayUtil::arraySort($data);
+
+        // 支付宝新版本  需要转码
+        foreach ($data as &$value) {
+            $value = StrUtil::characet($value, $this->config->charset);
+        }
+
+        $data['sign'] = $sign;// sign  需要放在末尾
+        
+        //为兼容公司客户端支付参数，强制防止在末尾
+        //$data['sign_type'] = 'RSA';
+        $data['sign_type'] = $this->signType;
 
         // 组装成 key=value&key=value 形式返回
         return http_build_query($data);

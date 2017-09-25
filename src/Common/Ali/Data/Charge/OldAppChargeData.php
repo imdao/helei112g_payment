@@ -1,5 +1,6 @@
 <?php
 namespace Payment\Common\Ali\Data\Charge;
+use Payment\Utils\ArrayUtil;
 
 /**
  * @author: helei
@@ -12,35 +13,59 @@ class OldAppChargeData extends ChargeBaseData
 {
 
     /**
-     * 业务请求参数的集合，最大长度不限，除公共参数外所有请求参数都必须放在这个参数中传递
-     *
+     * @author: imdao
+     * @description: 覆盖父类方法
      * @return string
      */
     protected function getBizContent()
     {
-        $content = [
-            'body'          => strval($this->body),
-            'subject'       => strval($this->subject),
-            'out_trade_no'  => strval($this->order_no),
-            'total_amount'  => strval($this->amount),
+        
+        return $content;
+    }
 
-            // 销售产品码，商家和支付宝签约的产品码，为固定值QUICK_MSECURITY_PAY
-            'product_code'  => 'QUICK_MSECURITY_PAY',
-            'goods_type'    => $this->goods_type,
-            'passback_params' => $this->return_param,
-            // TODO 优惠信息待支持  业务扩展参数，待支持
-            // 'promo_params' => '',
-            // 'extend_params => '',
-            'disable_pay_channels' => $this->limitPay,
-            'store_id' => $this->store_id,
+    /**
+    * @author: imdao
+    * @description: 覆盖父类方法
+    */
+    public function getData()
+    {
+        return $this->retData;
+    }
+
+    /**
+     * 构建 支付 加密数据
+     * @author: imdao
+     */
+    protected function buildData()
+    {   
+        $signData = [
+            // 公共参数设置
+            'partner'       => $this->partner,
+            'seller_id'     => $this->seller_id,
+            'out_trade_no'  => strval($this->order_no),
+            'subject'       => strval($this->subject),
+            'body'          => strval($this->body),   
+            'total_fee'  => strval($this->amount),         
+            'notify_url'  => 'http://api.yundaolan.com/v2/alipay/notify',
+            'service'   => 'mobile.securitypay.pay',
+            'payment_type' => '1',
+            'it_b_pay'=>'10m',
+            // 'app_id'        => $this->appId,
+            // 'method'        => $this->method,
+            // 'format'        => $this->format,
+            '_input_charset'       => strtolower($this->charset),
+            // 'sign_type'     => $this->signType,
+            // 'timestamp'     => $this->timestamp,
+            // 'version'       => $this->version,
+            // 'notify_url'    => $this->notifyUrl,
         ];
 
-        $timeExpire = $this->timeout_express;
-        if (! empty($timeExpire)) {
-            $express = floor(($timeExpire - strtotime($this->timestamp)) / 60);
-            ($express > 0) && $content['timeout_express'] = $express . 'm';// 超时时间 统一使用分钟计算
+        // 电脑支付  wap支付添加额外参数
+        if (in_array($this->method, ['alipay.trade.page.pay', 'alipay.trade.wap.pay'])) {
+            $signData['return_url'] = $this->returnUrl;
         }
 
-        return $content;
+        // 移除数组中的空值
+        $this->retData = ArrayUtil::paraFilter($signData);
     }
 }
