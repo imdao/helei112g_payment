@@ -54,8 +54,7 @@ class AliOldAppCharge extends AliBaseStrategy
         $data['sign'] = $sign;// sign  需要放在末尾
         
         //为兼容公司客户端支付参数，强制防止在末尾
-        //$data['sign_type'] = 'RSA';
-        $data['sign_type'] = $this->signType;
+        $data['sign_type'] = $this->config->signType;
 
         // 组装成 key=value&key=value 形式返回
         return http_build_query($data);
